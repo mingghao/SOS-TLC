@@ -1,6 +1,6 @@
 classdef Parameter
     properties (Constant)
-        delta = 3
+        delta = 1
         dt = 0.1
         g = 9.81
         m = 1650

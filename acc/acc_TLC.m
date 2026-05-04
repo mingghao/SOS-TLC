@@ -90,10 +90,18 @@ function [A_tlc, b_tlc] = get_TLC(F_r, cur_distance, cur_vel)
         A_tlc = [1/Parameter.m, 0];
         b_tlc = F_r/Parameter.m + 2*b/Parameter.delta^2 + 2*b_dot/Parameter.delta + remainder;
     else
-        mu_bound = -2*b/Parameter.delta^2 - 2*b_dot/Parameter.delta ;
+        mu_bound = -2*b/Parameter.delta^2 - 2*b_dot/Parameter.delta-remainder;
         if mu_bound > 0
-            A_tlc = [(2*b + Parameter.delta^2*remainder) / Parameter.m, 0];
-            b_tlc = -b_dot^2-(2*b + Parameter.delta^2*remainder)*F_r / Parameter.m;
+            if -b_dot/mu_bound > Parameter.delta*2
+                A_tlc = [1/Parameter.m, 0];
+                b_tlc = F_r/Parameter.m + 2*b/Parameter.delta^2 + 2*b_dot/Parameter.delta + remainder;
+            else
+                A_tlc = [(2*b + Parameter.delta^2*remainder) / Parameter.m, 0];
+                b_tlc = -b_dot^2+(2*b + Parameter.delta^2*remainder)*F_r / Parameter.m;
+                % A_tlc = [1/Parameter.m, 0];
+                % b_tlc = F_r/Parameter.m + 2*b/(-b_dot/mu_bound)^2 + 2*b_dot/(-b_dot/mu_bound) + remainder;
+                    
+            end
         else
             A_tlc = [1/Parameter.m, 0];
             b_tlc = F_r/Parameter.m + 2*b/Parameter.delta^2 + 2*b_dot/Parameter.delta + remainder;
