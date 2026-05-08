@@ -1,9 +1,9 @@
 classdef Parameter
     properties (Constant)
-        delta = [1,3,1,3]
+        delta = [1.5,3,1.5,3,1.5,3]
         dt = 0.1
-        color = ["c","b","m","r","g"]
-        exps = ["HOCBF","ZOH-TLC-1","ZOH-TLC-3","rTLC-1","rTLC-3"] 
+        color = ["c","b","m","r","g","y","k"]
+        exps = ["HOCBF","ZOH-TLC-1","ZOH-TLC-3","rTLC-1","rTLC-3","rTLC-1(SDP)","rTLC-3(SDP)"] 
         g = 9.81
         m = 1650
         f_0 = 0.1
@@ -17,8 +17,9 @@ classdef Parameter
         eps = 10
         c_a = 0.4
         c_d = 0.7
-        options = optimoptions('quadprog', 'Algorithm',...
-            'interior-point-convex','Display','off')
+        % options = optimoptions('quadprog', 'Algorithm',...
+        %     'interior-point-convex','Display','off')
+        options = optimset('Display','off')
     end
 end
 

@@ -3,7 +3,7 @@ clc;
 set(0,'DefaultTextInterpreter','latex');
 
 %% simulation time and state to be shown
-
+sdp_solver =SDP_solver(Parameter);
 
 %% rTLC
 for ex=0:length(Parameter.delta)
@@ -16,7 +16,7 @@ for ex=0:length(Parameter.delta)
     state_log(:, 1) = [20; 90];
     solve_time = zeros([1, timesteps - 1]);
     %% paramters for QPs (not changed with time)
-    H = 2 .* [1 ./ Parameter.m .^ 2, 0; 0, Parameter.eps];
+    H = 2 .* [1, 0; 0, Parameter.eps];
 
     %% main
     for i = 1:(timesteps - 1)
@@ -27,10 +27,15 @@ for ex=0:length(Parameter.delta)
         elseif ex<=2
             tic
             u(i) = compute_QP(state_log(:,i),H,@get_ZOHTLC,ex);
+            
+            t=toc;
+        elseif ex<=4
+            tic;
+            u(i) = compute_QP(state_log(:,i),H,@get_TLC,ex);
             t=toc;
         else
             tic;
-            u(i) = compute_QP(state_log(:,i),H,@get_TLC,ex);
+            u(i) = compute_SDP_rTLC(state_log(:,i),H,sdp_solver,ex);
             t=toc;
         end
         solve_time(i) = t;
@@ -103,21 +108,8 @@ for ex=0:length(Parameter.delta)
     end
     figure(1)
     subplot(3,1,1)
-    legend('','','$HOCBF$','$ZOH-TLC \quad \Delta t=1$','$ZOH-TLC \quad \Delta t=3$','$rTLC \quad \Delta t=1$','$rTLC \quad \Delta t=3$','Interpreter', 'latex','Fontsize',18)
+    legend('','','$HOCBF$','$ZOH-TLC \quad \Delta t=1$','$ZOH-TLC \quad \Delta t=3$','$rTLC \quad \Delta t=1$','$rTLC \quad \Delta t=3$','$rTLC(SDP) \quad \Delta t=1$','$rTLC(SDP) \quad \Delta t=3$','Interpreter', 'latex','Fontsize',10)
 end
-
-
-%% HOCBF
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -129,11 +121,11 @@ function u = compute_QP(cur_state, H, safe_func, ex)
     F_r = get_Fr(cur_vel);
     [A_tls, b_tls] = get_TLS(cur_vel, F_r);
     [A_tlc, b_tlc] = safe_func(F_r, cur_distance, cur_vel,ex);
-    F = -2 .* [F_r / Parameter.m ^ 2; 0];
+    F = -2 .* [F_r/Parameter.m; 0];
     A = [A_tls; A_tlc; 1, 0;-1, 0];
-    b = [b_tls; b_tlc; Parameter.m * Parameter.g * Parameter.c_a; Parameter.m * Parameter.g * Parameter.c_d];
+    b = [b_tls; b_tlc; Parameter.g * Parameter.c_a; Parameter.g * Parameter.c_d];
     [solution,~,~,~,~] = quadprog(H,F,A,b,[],[],[],[],[],Parameter.options);
-    u = solution(1);
+    u = solution(1)*Parameter.m;
 end
 
 function F_r = get_Fr(cur_vel)
@@ -143,48 +135,117 @@ end
 
 function [A_tls, b_tls] = get_TLS(cur_vel, F_r)
     v_bias = cur_vel - Parameter.v_d;
-    A_tls = [2*v_bias*0.1/Parameter.m, -1];
+    A_tls = [2*v_bias*0.1, -1];
     b_tls = 2*v_bias*F_r*0.1/Parameter.m - v_bias^2;
 end
+
+% function [A_tlc, b_tlc] = get_TLC(F_r, cur_distance, cur_vel,ex)  
+%     b = cur_distance - Parameter.sigma;
+%     b_dot = Parameter.v_0 - cur_vel;
+% 
+%     remainder = (Parameter.f_1*(-Parameter.g * Parameter.c_d-F_r/Parameter.m)*Parameter.delta(ex)-Parameter.f_2*cur_vel^2)/Parameter.m;
+% 
+%     if b_dot>=0
+%         A_tlc = [1/Parameter.m, 0];
+%         b_tlc = F_r/Parameter.m + 2*b/Parameter.delta(ex)^2 + 2*b_dot/Parameter.delta(ex) + remainder;
+%     else
+%         mu_bound = -2*b/Parameter.delta(ex)^2 - 2*b_dot/Parameter.delta(ex)-remainder;
+%         if mu_bound > 0
+%             if -b_dot/mu_bound > Parameter.delta(ex)
+%                 A_tlc = [1/Parameter.m, 0];
+%                 b_tlc = F_r/Parameter.m + 2*b/Parameter.delta(ex)^2 + 2*b_dot/Parameter.delta(ex) + remainder;
+%             else
+%                 A_tlc = [(2*b + Parameter.delta(ex)^2*remainder) / Parameter.m, 0];
+%                 b_tlc = -b_dot^2+(2*b + Parameter.delta(ex)^2*remainder)*F_r / Parameter.m;
+%             end
+%         else
+%             A_tlc = [1/Parameter.m, 0];
+%             b_tlc = F_r/Parameter.m + 2*b/Parameter.delta(ex)^2 + 2*b_dot/Parameter.delta(ex) + remainder;
+%         end
+%     end
+% end
 
 function [A_tlc, b_tlc] = get_TLC(F_r, cur_distance, cur_vel,ex)  
     b = cur_distance - Parameter.sigma;
     b_dot = Parameter.v_0 - cur_vel;
 
-    remainder = (Parameter.f_1*(-Parameter.g * Parameter.c_d-F_r/Parameter.m)*Parameter.delta(ex)-Parameter.f_2*cur_vel^2)/Parameter.m;
-
-    if b_dot>=0
-        A_tlc = [1/Parameter.m, 0];
+    remainder = (Parameter.delta(ex)^2/2)*(Parameter.f_1*(-Parameter.g * Parameter.c_d-F_r/Parameter.m)*Parameter.delta(ex)-Parameter.f_2*cur_vel^2)/Parameter.m;
+    mu_bound = (-b - b_dot*Parameter.delta(ex)-remainder)/Parameter.delta(ex)^2;
+    p = [mu_bound, b_dot, b+remainder];
+    [min_val,~] = find_poly_min(p, 0, Parameter.delta(ex));
+    if min_val>=0
+        A_tlc = [1, 0];
         b_tlc = F_r/Parameter.m + 2*b/Parameter.delta(ex)^2 + 2*b_dot/Parameter.delta(ex) + remainder;
     else
-        mu_bound = -2*b/Parameter.delta(ex)^2 - 2*b_dot/Parameter.delta(ex)-remainder;
-        if mu_bound > 0
-            if -b_dot/mu_bound > Parameter.delta(ex)
-                A_tlc = [1/Parameter.m, 0];
-                b_tlc = F_r/Parameter.m + 2*b/Parameter.delta(ex)^2 + 2*b_dot/Parameter.delta(ex) + remainder;
-            else
-                A_tlc = [(2*b + Parameter.delta(ex)^2*remainder) / Parameter.m, 0];
-                b_tlc = -b_dot^2+(2*b + Parameter.delta(ex)^2*remainder)*F_r / Parameter.m;
-            end
-        else
-            A_tlc = [1/Parameter.m, 0];
-            b_tlc = F_r/Parameter.m + 2*b/Parameter.delta(ex)^2 + 2*b_dot/Parameter.delta(ex) + remainder;
-        end
+        A_tlc = [2*(b + remainder), 0];
+        b_tlc = -b_dot^2+2*(b + remainder)*F_r / Parameter.m;
     end
+
 end
 
 
 function [A_tlc, b_tlc] = get_ZOHTLC(F_r, cur_distance, cur_vel,ex) 
     b = cur_distance - Parameter.sigma;
     b_dot = Parameter.v_0 - cur_vel;
-    A_tlc = [1/Parameter.m, 0];
+    A_tlc = [1, 0];
     b_tlc = F_r/Parameter.m + 2*b/Parameter.delta(ex)^2 + 2*b_dot/Parameter.delta(ex);
 end
 
 
-function [A_tlc, b_tlc] = get_HOCBF(F_r, cur_distance, cur_vel,ex) 
+function [A_tlc, b_tlc] = get_HOCBF(F_r, cur_distance, cur_vel, ex) 
     b = cur_distance - Parameter.sigma;
     b_dot = Parameter.v_0 - cur_vel;
-    A_tlc = [1/Parameter.m, 0];
+    A_tlc = [1, 0];
     b_tlc = F_r/Parameter.m + 1*b + 2*b_dot;
+end
+
+
+
+function [min_val, min_x] = find_poly_min(p, a, b)
+    val_a = polyval(p, a);
+    val_b = 0;
+    
+    dp = polyder(p); 
+    roots_dp = roots(dp);
+    
+    real_roots = roots_dp(abs(imag(roots_dp)) < 1e-10);
+    real_roots = real(real_roots); 
+    
+    valid_roots = real_roots(real_roots >= a & real_roots <= b);
+    
+    val_roots = polyval(p, valid_roots);
+    
+    all_x = [a; b; valid_roots];
+    all_vals = [val_a; val_b; val_roots];
+    
+    [min_val, min_idx] = min(all_vals);
+    min_x = all_x(min_idx);
+end
+
+function u = compute_SDP_rTLC(cur_state,H,solver,ex)
+    
+    cur_vel = cur_state(1);
+    cur_distance = cur_state(2);
+    F_r = get_Fr(cur_vel);
+    b_val = cur_distance - Parameter.sigma;
+    b_dot = Parameter.v_0 - cur_vel;
+    remainder = (Parameter.delta(ex)^2/2)*(Parameter.f_1*(-Parameter.g * Parameter.c_d-F_r/Parameter.m)*Parameter.delta(ex)-Parameter.f_2*cur_vel^2)/Parameter.m;
+    mu_bound = (-b_val - b_dot*Parameter.delta(ex)-remainder)/Parameter.delta(ex)^2;
+    p = [mu_bound, b_dot, b_val+remainder];
+    [min_val,~] = find_poly_min(p, 0, Parameter.delta(ex));
+    [A_tls, b_tls] = get_TLS(cur_vel, F_r);
+    A_tlc = [1, 0];
+    b_tlc = F_r/Parameter.m + 2*b_val/Parameter.delta(ex)^2 + 2*b_dot/Parameter.delta(ex) + remainder;
+    F = -2 .* [F_r/Parameter.m; 0];
+    A = [A_tls; A_tlc; 1, 0;-1, 0];
+    b = [b_tls; b_tlc; Parameter.g * Parameter.c_a; Parameter.g * Parameter.c_d];
+
+    if min_val>=0
+        [solution,~,~,~,~] = quadprog(H,F,A,b,[],[],[],[],[],Parameter.options);
+        u = solution(1)*Parameter.m;
+    else
+        [solution, ~] = solver([cur_vel; cur_vel^2; cur_distance; F_r; Parameter.delta(ex); Parameter.delta(ex)^2]);
+        u = solution * Parameter.m;
+    end
+  
 end
