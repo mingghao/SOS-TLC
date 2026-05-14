@@ -2,8 +2,8 @@ classdef Parameter
     properties (Constant)
         delta = [1.5,3,1.5,3,1.5,3]
         dt = 0.1
-        color = ["c","b","m","r","g","y","k"]
-        exps = ["HOCBF","ZOH-TLC-1","ZOH-TLC-3","rTLC-1","rTLC-3","rTLC-1(SDP)","rTLC-3(SDP)"] 
+        color = ["c","b","m","y","k","r","g"]
+        exps = ["HOCBF","ZOH-TLC-1.5","ZOH-TLC-3","SOS-TLC-1.5(QP)","SOS-TLC-3(QP)","SOS-TLC-1.5(SDP)","SOS-TLC-3(SDP)"] 
         g = 9.81
         m = 1650
         f_0 = 0.1

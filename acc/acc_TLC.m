@@ -108,7 +108,7 @@ for ex=0:length(Parameter.delta)
     end
     figure(1)
     subplot(3,1,1)
-    legend('','','$HOCBF$','$ZOH-TLC \quad \Delta t=1$','$ZOH-TLC \quad \Delta t=3$','$rTLC \quad \Delta t=1$','$rTLC \quad \Delta t=3$','$rTLC(SDP) \quad \Delta t=1$','$rTLC(SDP) \quad \Delta t=3$','Interpreter', 'latex','Fontsize',10)
+    legend('','','$HOCBF$','$ZOH-TLC \quad \Delta t=1.5$','$ZOH-TLC \quad \Delta t=3$','$SOS-TLC(QP) \quad \Delta t=1.5$','$SOS-TLC(QP) \quad \Delta t=3$','$SOS-TLC(SDP) \quad \Delta t=1.5$','$SOS-TLC(SDP) \quad \Delta t=3$','Interpreter', 'latex','Fontsize',13)
 end
 
 
