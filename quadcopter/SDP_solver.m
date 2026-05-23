@@ -7,7 +7,7 @@ function solver = SDP_solver(Parameter)
     b_tls = sdpvar(2, 1);
     coeff_h = sdpvar(2,5);
     coeff_hg = sdpvar(2,2);
-
+    remainders = sdpvar(2,1);
     % Decision Variables
     u = sdpvar(2, 1);
     slack = sdpvar(2, 1);
@@ -122,12 +122,13 @@ function solver = SDP_solver(Parameter)
     gamma2 = sdpvar(1,1);
     Constraints = [Constraints, [gamma1, 0, u(1); 0, gamma1, u(2); u(1), u(2), 1]>=0];
     Constraints = [Constraints, [gamma2, 0, slack(1); 0, gamma2, slack(2); slack(1), slack(2), 1]>=0];
+    % Constraints = [Constraints, sos_slack(1)>=remainders(1)];
+    % Constraints = [Constraints, sos_slack(2)>=remainders(2)];
 
     weight_slack1 = 100;
-    weight_slack2 = 1000;
+    weight_slack2 = 100;
     Objective = gamma1 + weight_slack1 * gamma2 + weight_slack2*(sos_slack(1) + sos_slack(2));
-
     ops = sdpsettings('solver', 'mosek', 'verbose', 0);
     
-    solver = optimizer(Constraints, Objective, ops, {p_y, Delta, A_tls, b_tls, coeff_h, coeff_hg}, {u, slack,sos_slack});
+    solver = optimizer(Constraints, Objective, ops, {p_y, Delta, A_tls, b_tls, coeff_h, coeff_hg, remainders}, {u, slack,sos_slack});
 end
