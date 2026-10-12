@@ -1,6 +1,6 @@
 # SOS-TLC
 
-This repository contains the official MATLAB implementation for our paper: **"Taylor-Lagrange Control in Sampled-Data Systems"**. 
+This repository contains the official MATLAB implementation for our paper: **"Taylor-Lagrange Control for Sampled-Data Systems"**. 
 
 It provides the codebase for running Sampled-Data TLC (SD-TLC) and Sum-of-Squares TLC (SOS-TLC) to ensure continuous-time safety for nonlinear systems with Zero-Order-Hold (ZOH) inputs.
 
