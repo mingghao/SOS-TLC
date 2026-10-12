@@ -28,11 +28,11 @@ function solver = SDP_solver(Parameter)
         % TLC
         b = p_z - Parameter.sigma;
         b_dot = Parameter.v_0 - p_v;
-        remainder = (delta_2/2) * (Parameter.f_1 * (-Parameter.g * Parameter.c_d - p_Fr/Parameter.m) * delta - Parameter.f_2 * p_v_2) / Parameter.m;
+        remainder = (Parameter.f_1 * (-Parameter.g * Parameter.c_d - p_Fr/Parameter.m) * delta - Parameter.f_2 * p_v_2) / Parameter.m;
 
-        c0 = b + remainder;
+        c0 = b;
         c1 = b_dot;
-        c2 = 0.5 * (p_Fr/Parameter.m - a);
+        c2 = 0.5 * (p_Fr/Parameter.m - a + remainder);
 
         Constraints = [Constraints, Q0(1,1) == c0];
         Constraints = [Constraints, 2*Q0(1,2) + q3 * delta == c1];

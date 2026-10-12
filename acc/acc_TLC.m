@@ -55,60 +55,66 @@ for ex=0:length(Parameter.delta)
     %% draw
     if ex==0
         figure('Position',[1000,231,1043,1007])
-        subplot(3,1,1)
-        plot([0 30], [Parameter.v_0,Parameter.v_0], 'k--',"LineWidth", 1.5);
-        hold on;
-        plot([0 30], [Parameter.v_d,Parameter.v_d], 'k--',"LineWidth", 1.5);
-        plot(duration, state_log(1, :),"LineWidth", 1.5,'Color',Parameter.color(ex+1));
-        xlabel('$t/s$','Fontsize',20);
-        ylabel('$v/(m/s)$','Fontsize',20)
-        xlim([0, 30]);
-        ylim([12, 25]);
-        grid on
-        hold off;
+        ax1 = subplot(3,1,1);
+        plot(ax1,[0 30], [Parameter.v_0,Parameter.v_0], 'k--',"LineWidth", 1.5);
+        hold(ax1,'on');
+        plot(ax1,[0 30], [Parameter.v_d,Parameter.v_d], 'k--',"LineWidth", 1.5);
+        plot(ax1,duration, state_log(1, :),"LineWidth", 1.5,'Color',Parameter.color(ex+1));
+        xlabel(ax1,'$t/s$','Fontsize',20);
+        ylabel(ax1,'$v/(m/s)$','Fontsize',20)
+        xlim(ax1,[0, 30]);
+        ylim(ax1,[12, 25]);
+        grid(ax1,"on");
+  
 
-        subplot(3,1,2)
-        plot([0 30], [-0.7,-0.7], 'k--',"LineWidth", 1.5);
-        hold on;
-        plot([0 30], [0.4,0.4], 'k--',"LineWidth", 1.5);
-        plot(duration(1:end-1), u./Parameter.m./Parameter.g,"LineWidth", 1.5,'Color',Parameter.color(ex+1));
-        xlabel('$t/s$','Fontsize',20);
-        ylabel('$u/(Mg)$','Fontsize',20);
-        xlim([0, 30]);
+        ax2 = subplot(3,1,2);
+        plot(ax2,[0 30], [-0.7,-0.7], 'k--',"LineWidth", 1.5);
+        hold(ax2,"on");
+        plot(ax2,[0 30], [0.4,0.4], 'k--',"LineWidth", 1.5);
+        plot(ax2,duration(1:end-1), u./Parameter.m./Parameter.g,"LineWidth", 1.5,'Color',Parameter.color(ex+1));
+        xlabel(ax2,'$t/s$','Fontsize',20);
+        ylabel(ax2,'$u/(Mg)$','Fontsize',20);
+        xlim(ax2,[0, 30]);
         % ylim([-10, 100]);
-        grid on;
-        hold off;
+        grid(ax2,"on");
 
-        subplot(3,1,3)
-        plot([0 30], [0.0, 0.0], 'k--',"LineWidth", 1.5);
-        hold on;
-        plot(duration, state_log(2,:)-Parameter.sigma,"LineWidth", 1.5,'Color',Parameter.color(ex+1));
-        xlabel('$t/s$','Fontsize',20);
-        ylabel('$h(x)$','Fontsize',20);
-        xlim([0, 30]);
-        grid on;
-        hold off;
+
+        ax3 = subplot(3,1,3);
+        plot(ax3, [0 30], [0.0, 0.0], 'k--',"LineWidth", 1.5);
+        hold(ax3,"on");
+       
+        plot(ax3, duration, state_log(2,:)-Parameter.sigma,"LineWidth", 1.5,'Color',Parameter.color(ex+1));
+        xlabel(ax3, '$t/s$','Fontsize',20);
+        ylabel(ax3, '$h(x)$','Fontsize',20);
+        xlim(ax3, [0, 30]);
+        grid(ax3,"on");
+
+        ax_in = axes('Position', [0.5, 0.19, 0.3, 0.12]); 
+        plot(ax_in, [0 30], [0.0, 0.0], 'k--',"LineWidth", 1.5);
+        hold(ax_in, 'on');
+        plot(ax_in, duration, state_log(2,:)-Parameter.sigma,"LineWidth", 1.5,'Color',Parameter.color(ex+1));
+        xlim(ax_in, [8, 11]); 
+        ylim(ax_in, [-2, 5]); 
+        grid(ax_in, 'on');
+        box(ax_in, 'on');
     else
-        figure(1)
-        subplot(3,1,1)
-        hold on;
-        plot(duration, state_log(1, :),"LineWidth", 1.5,'Color',Parameter.color(ex+1));
-        hold off;
 
-        subplot(3,1,2)
-        hold on;
-        plot(duration(1:end-1), u./Parameter.m./Parameter.g,"LineWidth", 1.5,'Color',Parameter.color(ex+1));
-        hold off;
-
-        subplot(3,1,3)
-        hold on;
-        plot(duration, state_log(2,:)-Parameter.sigma,"LineWidth", 1.5,'Color',Parameter.color(ex+1));
-        hold off;
+        plot(ax1, duration, state_log(1, :),"LineWidth", 1.5,'Color',Parameter.color(ex+1));
+        plot(ax2, duration(1:end-1), u./Parameter.m./Parameter.g,"LineWidth", 1.5,'Color',Parameter.color(ex+1));
+        plot(ax3, duration, state_log(2,:)-Parameter.sigma,"LineWidth", 1.5,'Color',Parameter.color(ex+1));
+        plot(ax_in, duration, state_log(2,:)-Parameter.sigma,"LineWidth", 1.5,'Color',Parameter.color(ex+1));
         
     end
     figure(1)
     subplot(3,1,1)
-    legend('','','$HOCBF$','$ZOH-TLC \quad \Delta t=1.5$','$ZOH-TLC \quad \Delta t=3$','$SOS-TLC(QP) \quad \Delta t=1.5$','$SOS-TLC(QP) \quad \Delta t=3$','$SOS-TLC(SDP) \quad \Delta t=1.5$','$SOS-TLC(SDP) \quad \Delta t=3$','Interpreter', 'latex','Fontsize',13)
+    legend('','','$HOCBF$','$ZOH-TLC \quad \Delta t=1.5$','$ZOH-TLC \quad \Delta t=3$','$SD-SOS-TLC(QP) \quad \Delta t=1.5$','$SD-SOS-TLC(QP) \quad \Delta t=3$','$SD-SOS-TLC(SDP) \quad \Delta t=1.5$','$SD-SOS-TLC(SDP) \quad \Delta t=3$','Interpreter', 'latex','Fontsize',13)
+    legend('Box','off')
+    annotation('arrow', [0.38, 0.48], [0.17, 0.22], ...
+            'Color', 'k', ...             
+            'LineWidth', 1.5, ...        
+            'HeadStyle', 'vback2', ...    
+            'HeadLength', 10, ...        
+            'HeadWidth', 8); 
 end
 
 
@@ -139,46 +145,21 @@ function [A_tls, b_tls] = get_TLS(cur_vel, F_r)
     b_tls = 2*v_bias*F_r*0.1/Parameter.m - v_bias^2;
 end
 
-% function [A_tlc, b_tlc] = get_TLC(F_r, cur_distance, cur_vel,ex)  
-%     b = cur_distance - Parameter.sigma;
-%     b_dot = Parameter.v_0 - cur_vel;
-% 
-%     remainder = (Parameter.f_1*(-Parameter.g * Parameter.c_d-F_r/Parameter.m)*Parameter.delta(ex)-Parameter.f_2*cur_vel^2)/Parameter.m;
-% 
-%     if b_dot>=0
-%         A_tlc = [1/Parameter.m, 0];
-%         b_tlc = F_r/Parameter.m + 2*b/Parameter.delta(ex)^2 + 2*b_dot/Parameter.delta(ex) + remainder;
-%     else
-%         mu_bound = -2*b/Parameter.delta(ex)^2 - 2*b_dot/Parameter.delta(ex)-remainder;
-%         if mu_bound > 0
-%             if -b_dot/mu_bound > Parameter.delta(ex)
-%                 A_tlc = [1/Parameter.m, 0];
-%                 b_tlc = F_r/Parameter.m + 2*b/Parameter.delta(ex)^2 + 2*b_dot/Parameter.delta(ex) + remainder;
-%             else
-%                 A_tlc = [(2*b + Parameter.delta(ex)^2*remainder) / Parameter.m, 0];
-%                 b_tlc = -b_dot^2+(2*b + Parameter.delta(ex)^2*remainder)*F_r / Parameter.m;
-%             end
-%         else
-%             A_tlc = [1/Parameter.m, 0];
-%             b_tlc = F_r/Parameter.m + 2*b/Parameter.delta(ex)^2 + 2*b_dot/Parameter.delta(ex) + remainder;
-%         end
-%     end
-% end
 
 function [A_tlc, b_tlc] = get_TLC(F_r, cur_distance, cur_vel,ex)  
     b = cur_distance - Parameter.sigma;
     b_dot = Parameter.v_0 - cur_vel;
 
-    remainder = (Parameter.delta(ex)^2/2)*(Parameter.f_1*(-Parameter.g * Parameter.c_d-F_r/Parameter.m)*Parameter.delta(ex)-Parameter.f_2*cur_vel^2)/Parameter.m;
-    mu_bound = (-b - b_dot*Parameter.delta(ex)-remainder)/Parameter.delta(ex)^2;
-    p = [mu_bound, b_dot, b+remainder];
+    remainder = (Parameter.f_1*(-Parameter.g * Parameter.c_d-F_r/Parameter.m)*Parameter.delta(ex)-Parameter.f_2*cur_vel^2)/Parameter.m;
+    mu_bound = (-b - b_dot*Parameter.delta(ex))/Parameter.delta(ex)^2-remainder;
+    p = [mu_bound+remainder, b_dot, b];
     [min_val,~] = find_poly_min(p, 0, Parameter.delta(ex));
     if min_val>=0
         A_tlc = [1, 0];
         b_tlc = F_r/Parameter.m + 2*b/Parameter.delta(ex)^2 + 2*b_dot/Parameter.delta(ex) + remainder;
     else
-        A_tlc = [2*(b + remainder), 0];
-        b_tlc = -b_dot^2+2*(b + remainder)*F_r / Parameter.m;
+        A_tlc = [b, 0];
+        b_tlc = -b_dot^2./2 + b*(remainder + F_r / Parameter.m);
     end
 
 end
@@ -229,9 +210,9 @@ function u = compute_SDP_rTLC(cur_state,H,solver,ex)
     F_r = get_Fr(cur_vel);
     b_val = cur_distance - Parameter.sigma;
     b_dot = Parameter.v_0 - cur_vel;
-    remainder = (Parameter.delta(ex)^2/2)*(Parameter.f_1*(-Parameter.g * Parameter.c_d-F_r/Parameter.m)*Parameter.delta(ex)-Parameter.f_2*cur_vel^2)/Parameter.m;
-    mu_bound = (-b_val - b_dot*Parameter.delta(ex)-remainder)/Parameter.delta(ex)^2;
-    p = [mu_bound, b_dot, b_val+remainder];
+    remainder = (Parameter.f_1*(-Parameter.g * Parameter.c_d-F_r/Parameter.m)*Parameter.delta(ex)-Parameter.f_2*cur_vel^2)/Parameter.m;
+    mu_bound = (-b_val - b_dot*Parameter.delta(ex))/Parameter.delta(ex)^2-remainder;
+    p = [mu_bound+remainder, b_dot, b_val];
     [min_val,~] = find_poly_min(p, 0, Parameter.delta(ex));
     [A_tls, b_tls] = get_TLS(cur_vel, F_r);
     A_tlc = [1, 0];
